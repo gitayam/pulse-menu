@@ -3,7 +3,7 @@
 
 # Install and Use
 ## Install 
-
+`git clone https://github.com/gitayam/pulse-menu.git && chmod 755 ./pulse-menu/pulse-menu.sh`
 ## Use
 `./pulse-menu.sh`
 User will be prompted for all fields. There is a limit to the number of values with this method
