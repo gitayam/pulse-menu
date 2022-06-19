@@ -2,7 +2,7 @@
 #OS check
 OS=$(uname)
 if [ "$OS" == "Darwin" ];then
-    clip_command=""
+    clip_command="pbcopy"
 else
     clip_command="xclip -sel c"
 fi
