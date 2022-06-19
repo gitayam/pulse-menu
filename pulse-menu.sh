@@ -3,8 +3,10 @@
 OS=$(uname)
 if [ "$OS" == "Darwin" ];then
     clip_command="pbcopy"
+    installer="brew install"
 else
     clip_command="xclip -sel c"
+    installer="sudo apt install -y"
 fi
 #temp file is used to store DSL Query and is removed at the end of the script
 temp_file="./temp_file_pulse"
@@ -79,6 +81,14 @@ username_func(){
         
 }
 image_func(){
+    #make sure pip3 is installed and check to see if imagehash-cli is installed on system
+    if [ "$OS" == "Darwin" ];then
+        which pip3 &>2 || $installer python@3.10
+        pip3 list | grep imagehash-cli &>2||pip3 install imagehash-cli
+    else
+        which pip3 &>2 || $installer python3.10
+        pip3 list | grep imagehash-cli &>2||pip3 install imagehash-cli
+    fi
     if [ -z "$initial_var" ]; then
         read -p "Paste Image URLs (sep. with comma): " initial_var
         if [ -z "initial_var" ];then
@@ -94,13 +104,31 @@ image_func(){
                 clean_URL=$(echo "$image"|sed 's/"//g'|sed 's/^ //g')
                 curl "$clean_URL" --output temp_image${count}.jpg
                 image_hash=$(shasum -a 256 temp_image${count}.jpg|cut -d " " -f 1)
+                image_dhash=$(imagehash temp_image${count}.jpg --hash difference )
                 echo -e "
                     {
                     \"match_phrase\": {
-                        \"image\": \"${image_hash}\"
+                        \"image\": \"${image_hash}\" 
+                    }
+                    },
+                    {
+                    \"match_phrase\": {
+                        \"profile_image_hash\": \"${image_hash}\"
+                    }
+                    },
+                    {
+                    \"match_phrase\": {
+                        \"dhash_hex\": \"${image_dhash}\"
+                    }
+                    },
+                    {
+                    \"match_phrase\": {
+                        \"profile_image_dhash_hex\": \"${image_dhash}\"
                     }
                     },"
             done)
+            #remove copies
+            rm -rf temp_image*.jpg
             #ending parenthesis is for the initial "pulse_body var"
             echo -e "$pulse_body"|sed \$d >> $temp_file
         fi
