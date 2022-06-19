@@ -1,5 +1,11 @@
 #!/bin/bash
-
+#OS check
+OS=$(uname)
+if [ "$OS" == "Darwin" ];then
+    clip_command=""
+else
+    clip_command="xclip -sel c"
+fi
 #temp file is used to store DSL Query and is removed at the end of the script
 temp_file="./temp_file_pulse"
 #rm temp file if already in system
@@ -27,7 +33,7 @@ clean_data(){
         echo "User Input Detected."
     fi
         
-        echo "$initial_var"|pbcopy
+        echo "$initial_var"|$clip_command
         echo "Copied to clipboard"
         dirty_lines=$(wc -l < $input_file)
         if [[ $dirty_lines -gt 500 ]];then
@@ -38,7 +44,7 @@ clean_data(){
             while [[ $dirty_lines -gt 500 ]];do
                 counter=$(($counter + 500))
                 initial_var=$(tail -n +2 "$input_file"|cut -d , -f 1|sed 's/\"//g'|sed -n "$counter,$(($counter + 500)) p"|tr '\n' ','|sed '$ s/.$//')
-                echo "$initial_var"|pbcopy
+                echo "$initial_var"|$clip_command
                 echo "copied lines: $counter through $(($counter + 500))"
                 printf "\n\nPaste content to approriate section before moving on:\n"
                 read -p "press enter when ready for the next batch"
@@ -269,7 +275,7 @@ header(){
 footer(){
     #print out the body above minus 1 line to snip that last comma
     printf "}\n]\n}\n}\n}" >> $temp_file
-    cat $temp_file |pbcopy && echo "copied to clipboard"
+    cat $temp_file |$clip_command && echo "copied to clipboard"
     rm $temp_file
 }
 
