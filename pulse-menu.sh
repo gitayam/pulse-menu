@@ -76,28 +76,36 @@ username_func(){
             }
             },";done)
         echo -e "$pulse_body"|sed \$d >> $temp_file
-        unset $pulse_body
+        
 }
 image_func(){
     if [ -z "$initial_var" ]; then
-        read -p "Paste usernames (sep. with comma): " initial_var
+        read -p "Paste Image URLs (sep. with comma): " initial_var
         if [ -z "initial_var" ];then
-            #if user did not input name then get name from url
+            #if user did not input image url then get name from arg
             initial_var="$*"
+        else
+            #assume url was passsed in
+            pulse_var=${initial_var//$'\n'/}
+            count=0;
+            pulse_body=$(IFS=","
+            for image in $pulse_var;do
+                #clean up image url in case of quotes or leading spaces
+                clean_URL=$(echo "$image"|sed 's/"//g'|sed 's/^ //g')
+                curl "$clean_URL" --output temp_image${count}.jpg
+                image_hash=$(shasum -a 256 temp_image${count}.jpg|cut -d " " -f 1)
+                echo -e "
+                    {
+                    \"match_phrase\": {
+                        \"image\": \"${image_hash}\"
+                    }
+                    },"
+            done)
+            #ending parenthesis is for the initial "pulse_body var"
+            echo -e "$pulse_body"|sed \$d >> $temp_file
         fi
     fi
-    pulse_var=${initial_var//$'\n'/}
-        pulse_body=$(IFS=","
-        for fullWord in $pulse_var;do
-        pulse_value=$(echo "$fullWord"|sed 's/"//g'|sed 's/^ //g')
-        echo -e "
-            {
-            \"match_phrase\": {
-                \"image\": \"${pulse_value}\"
-            }
-            },";done)
-        echo -e "$pulse_body"|sed \$d >> $temp_file
-        unset $pulse_body
+        
 }
 
 url_func(){
@@ -112,15 +120,15 @@ url_func(){
     
     pulse_var=${initial_var//$'\n'/}
         pulse_body=$(IFS=","
-        for fullWord in $pulse_var;do
-        pulse_value=$(echo "$fullWord"|sed 's/"//g'|sed 's/^ //g')
+        for URL in $pulse_var;do
+        pulse_value=$(echo "$URL"|sed 's/"//g'|sed 's/^ //g')
         echo -e "{
         \"wildcard\": {
         \"meta.links.results\": \"${pulse_value}*\"
         }
     },";done)
 echo -e "$pulse_body"|sed \$d >> $temp_file
-unset $pulse_body
+# unset $pulse_body
 }
 
 geo_func(){
@@ -134,8 +142,8 @@ geo_func(){
     fi
     pulse_var=${initial_var//$'\n'/}
         pulse_body=$(IFS=","
-        for fullWord in $pulse_var;do
-        pulse_value=$(echo "$fullWord"|sed 's/"//g'|sed 's/^ //g')
+        for location in $pulse_var;do
+        pulse_value=$(echo "$location"|sed 's/"//g'|sed 's/^ //g')
         echo -e "
         {
         \"wildcard\": {
@@ -174,7 +182,7 @@ geo_func(){
     
     },";done)
 echo -e "$pulse_body"|sed \$d >> $temp_file
-unset $pulse_body
+# unset $pulse_body
 }
 hashtag_func(){
     ######### hashtag option meta.hashtag.results
