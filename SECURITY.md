@@ -1,6 +1,6 @@
 # Security Policy
 
-This script is optimized for off-line use to maximize security and privacy. 
+This script is optimized for off-line use to maximize security and privacy.
 
 ## Reporting a Vulnerability
 
